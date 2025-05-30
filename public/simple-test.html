@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .note {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple API Test</h1>
+    
+    <p>This form will open the API in a new tab. You'll need to check the Network tab in your browser's developer tools to see the response.</p>
+    
+    <form action="/api-export/download" method="POST" target="_blank">
+        <div class="form-group">
+            <label for="id">ID (Required):</label>
+            <input type="text" id="id" name="id" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="filename">Filename (Optional):</label>
+            <input type="text" id="filename" name="filename" placeholder="Default: api-data-export">
+        </div>
+        
+        <div class="form-group">
+            <label for="_token">CSRF Token:</label>
+            <input type="text" id="_token" name="_token" readonly>
+            <button type="button" onclick="getToken()" style="width: auto; margin-top: 5px;">Get Token</button>
+        </div>
+        
+        <button type="submit">Test API</button>
+    </form>
+    
+    <div class="note">
+        <p><strong>Note:</strong> You need to click "Get Token" before submitting the form.</p>
+    </div>
+    
+    <script>
+        function getToken() {
+            fetch('/csrf-token')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('_token').value = data.csrf_token;
+                    alert('Token retrieved successfully!');
+                })
+                .catch(error => {
+                    alert('Error getting token: ' + error.message);
+                });
+        }
+    </script>
+</body>
+</html>

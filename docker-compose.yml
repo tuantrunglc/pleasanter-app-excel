@@ -1,0 +1,80 @@
+version: '3'
+services:
+    # PHP Service
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: pleasanter-app-excel
+        container_name: pleasanter-app
+        restart: unless-stopped
+        tty: true
+        # Removed user directive to run as root by default
+        environment:
+            SERVICE_NAME: app
+            SERVICE_TAGS: dev
+        working_dir: /var/www/html
+        volumes:
+            - ./:/var/www/html:cached
+            - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+            - app-storage:/var/www/html/storage
+            - app-cache:/var/www/html/bootstrap/cache
+        networks:
+            - app-network
+        depends_on:
+            - mysql
+
+    # Nginx Service
+    webserver:
+        image: nginx:alpine
+        container_name: pleasanter-webserver
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "${APP_PORT:-80}:80"
+        volumes:
+            - ./:/var/www/html:cached
+            - ./nginx/conf.d/:/etc/nginx/conf.d/
+            - app-storage:/var/www/html/storage
+        networks:
+            - app-network
+        depends_on:
+            - app
+
+    # MySQL Service
+    mysql:
+        image: mysql:8.0
+        container_name: pleasanter-mysql
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "${FORWARD_DB_PORT:-3307}:3306"
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_USER: ${DB_USERNAME}
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        volumes:
+            - dbdata:/var/lib/mysql
+        networks:
+            - app-network
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
+            retries: 3
+            timeout: 5s
+
+# Networks
+networks:
+    app-network:
+        driver: bridge
+
+# Volumes
+volumes:
+    dbdata:
+        driver: local
+    app-storage:
+        driver: local
+    app-cache:
+        driver: local
